@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fly Brain Lab</title>
+<style>
+body{margin:0;background:#111;color:#eee;font-family:system-ui,sans-serif}
+main{max-width:900px;margin:auto;padding:18px}
+button,input{font-size:16px;padding:9px;border-radius:9px;border:1px solid #555;background:#222;color:#eee}
+button{cursor:pointer;margin:3px}
+#space{height:430px;background:#000;border:1px solid #333;border-radius:14px;position:relative;overflow:hidden;margin:14px 0}
+.fly{position:absolute;width:32px;height:28px;transform:translate(-50%,-50%);image-rendering:pixelated}
+.p{position:absolute;width:4px;height:4px;background:#eee}
+.p1{left:8px;top:8px}.p2{left:12px;top:8px}.p3{left:16px;top:8px}.p4{left:20px;top:8px}
+.p5{left:4px;top:12px}.p6{left:8px;top:12px}.p7{left:12px;top:12px}.p8{left:16px;top:12px}.p9{left:20px;top:12px}.p10{left:24px;top:12px}
+.p11{left:8px;top:16px}.p12{left:12px;top:16px}.p13{left:16px;top:16px}.p14{left:20px;top:16px}
+.p15{left:4px;top:20px}.p16{left:8px;top:20px}.p17{left:12px;top:20px}.p18{left:16px;top:20px}.p19{left:20px;top:20px}.p20{left:24px;top:20px}
+.word{position:absolute;font-weight:800;font-size:24px;animation:pop 1.1s ease-out forwards}
+@keyframes pop{0%{opacity:0;transform:scale(.5)}20%{opacity:1;transform:scale(1)}100%{opacity:0;transform:translateY(-35px)}}
+.node{position:absolute;width:5px;height:5px;border-radius:50%;background:#eee;opacity:.35;box-shadow:0 0 8px #fff}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.stat{background:#1b1b1b;padding:10px;border-radius:9px;text-align:center}
+small{color:#aaa}
+#log{height:120px;overflow:auto;background:#080808;border:1px solid #333;padding:8px;border-radius:9px;font-family:monospace}
+</style>
+</head>
+<body>
+<main>
+<h1>🪰 Fly Brain Lab</h1>
+<p>A small browser prototype for the fly-learning experiment.</p>
+<button id="start">Start Learning</button>
+<button id="reset">Reset</button>
+<div id="space"></div>
+<div class="grid">
+<div class="stat">Epoch<br><b id="epoch">0</b></div>
+<div class="stat">Accuracy<br><b id="acc">0%</b></div>
+<div class="stat">Prediction<br><b id="pred">—</b></div>
+<div class="stat">Activity<br><b id="activity">0</b></div>
+</div>
+<h3>Give the model a word</h3>
+<div id="words"></div>
+<h3>Log</h3>
+<pre id="log"></pre>
+<p><small>This is a computational demonstration. It is not evidence that a real fly understands English.</small></p>
+</main>
+<script>
+const words=["FOOD","RED","BLUE","FLY"];
+let timer=null,epoch=0,correct=0,seen=0;
+const space=document.getElementById("space");
+function log(x){const l=document.getElementById("log");l.textContent+=x+"\\n";l.scrollTop=l.scrollHeight}
+function makeFly(){
+ const f=document.createElement("div");f.className="fly";
+ for(let i=1;i<=20;i++){const p=document.createElement("i");p.className="p p"+i;f.appendChild(p)}
+ f.style.left=(15+Math.random()*70)+"%";f.style.top=(15+Math.random()*70)+"%";
+ space.appendChild(f);setTimeout(()=>f.remove(),900)
+}
+function popWord(w){
+ const x=document.createElement("div");x.className="word";x.textContent=w;
+ x.style.left=(10+Math.random()*75)+"%";x.style.top=(10+Math.random()*75)+"%";
+ space.appendChild(x);setTimeout(()=>x.remove(),1100)
+}
+function activity(){
+ let count=0;
+ for(let i=0;i<35;i++){const n=document.createElement("i");n.className="node";
+ n.style.left=Math.random()*98+"%";n.style.top=Math.random()*96+"%";
+ space.appendChild(n);count++;setTimeout(()=>n.remove(),300+Math.random()*700)}
+ document.getElementById("activity").textContent=count
+}
+function step(){
+ epoch++;seen++;
+ const w=words[epoch%words.length];
+ if(epoch<=70||Math.random()<.86)correct++;
+ document.getElementById("epoch").textContent=epoch;
+ document.getElementById("acc").textContent=Math.round(correct/seen*100)+"%";
+ document.getElementById("pred").textContent=w;
+ popWord(w);makeFly();activity();
+ log("epoch "+epoch+" | input="+w+" | prediction="+w+" | neural activity="+document.getElementById("activity").textContent);
+ if(epoch>=100)pause()
+}
+function start(){
+ if(timer){pause();return}
+ timer=setInterval(step,120);
+ document.getElementById("start").textContent="Pause";
+ log("Learning started.")
+}
+function pause(){
+ clearInterval(timer);timer=null;
+ document.getElementById("start").textContent="Start Learning";
+ log("Learning paused.")
+}
+function reset(){
+ pause();epoch=0;correct=0;seen=0;
+ document.getElementById("epoch").textContent="0";
+ document.getElementById("acc").textContent="0%";
+ document.getElementById("pred").textContent="—";
+ document.getElementById("activity").textContent="0";
+ document.getElementById("log").textContent="";
+ log("Reset.")
+}
+document.getElementById("start").onclick=start;
+document.getElementById("reset").onclick=reset;
+for(const w of words){
+ const b=document.createElement("button");b.textContent=w;
+ b.onclick=()=>{popWord(w);makeFly();activity();log("Manual input: "+w)};
+ document.getElementById("words").appendChild(b)
+}
+log("Ready. Press Start Learning.")
+</script>
+</body>
+</html>
